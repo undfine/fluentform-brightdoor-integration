@@ -4,6 +4,7 @@
  * Description: Used to import and sync contacts with Brightdoor CRM
  * Version:     1.2.1
  * Author:      Dustin Wight
+ * Author URI: https://github.com/undfine/fluentform-brightdoor-integration
  * Text Domain: ff_brightdoor
  */
 
