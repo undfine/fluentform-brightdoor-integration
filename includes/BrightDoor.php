@@ -196,7 +196,8 @@ class FF_BrightDoor extends IntegrationManager
             ],
             'check_existing_email' => false,
             'auto_reply' => false,
-            'enabled' => true
+            'enabled' => true,
+            'debug' => false,
         ];
         
     }
@@ -207,16 +208,16 @@ class FF_BrightDoor extends IntegrationManager
             'fields' => [
                 [
                     'key' => 'name',
-                    'label' => 'Name',
+                    'label' => __('Name','ff_brightdoor'),
                     'required' => true,
-                    'placeholder' => 'Your Feed Name',
+                    'placeholder' => __('Your Feed Name','ff_brightdoor'),
                     'component' => 'text'
                 ],
                 [
                     'key' => 'contact_fields',
                     'require_list' => false,
-                    'label' => 'Map Contact Fields',
-                    'tips' => 'Select which Fluent Forms fields pair with their respective BrightDoor fields.',
+                    'label' => __('Map Contact Fields', 'ff_brightdoor'),
+                    'tips' => __('Select which Fluent Forms fields pair with their respective BrightDoor fields.', 'ff_brightdoor'),
                     'component' => 'map_fields',
                     'field_label_remote' => 'BrightDoor Field',
                     'field_label_local' => 'Form Field',
@@ -273,16 +274,16 @@ class FF_BrightDoor extends IntegrationManager
                 ],
                 [
                     'key'       => 'contact_attributes',
-                    'label'     => __('Contact Attributes', 'fluentform'),
-                    'tips'        => __('Add custom fields to match up with contact attribute fields. Values should be in an acceptable form (STRING or INT)', 'fluentform'),
+                    'label'     => __('Contact Attributes', 'ff_brightdoor'),
+                    'tips'        => __('Add custom fields to match up with contact attribute fields. Values should be in an acceptable form (STRING or INT)', 'ff_brightdoor'),
                     'component' => 'dropdown_label_repeater',
                     'field_label' => 'Attribute Name',
                     'value_label' => 'Value',
                 ], 
                 [
                     'key'       => 'extra_fields',
-                    'label'     => __('Additional Contact Fields', 'fluentform'),
-                    'tips'        => __('Extra Contact fields to sync with Brightdoor. Values should be in an acceptable form (String, Integer or Boolean)', 'fluentform'),
+                    'label'     => __('Additional Contact Fields', 'ff_brightdoor'),
+                    'tips'        => __('Extra Contact fields to sync with Brightdoor. Values should be in an acceptable form (String, Integer or Boolean)', 'ff_brightdoor'),
                     'component' => 'dropdown_many_fields',
                     'field_label_remote' => 'Contact Field',
                     'field_label_local'  => 'Form Field',
@@ -310,9 +311,9 @@ class FF_BrightDoor extends IntegrationManager
                 ],  
                 [
                     'key'         => 'contact_status_id',
-                    'placeholder' => __('Contact Status', 'fluentform'),
-                    'label'       => __('Contact Status', 'fluentform'),
-                    'tips'        => __('Select the Initial Contact Status', 'fluentform'),
+                    'placeholder' => __('Contact Status', 'ff_brightdoor'),
+                    'label'       => __('Contact Status', 'ff_brightdoor'),
+                    'tips'        => __('Select the Initial Contact Status', 'ff_brightdoor'),
                     'component'   => 'select',
                     'required'    => true,
                     'is_multiple' => false,
@@ -335,8 +336,8 @@ class FF_BrightDoor extends IntegrationManager
                 [
                     'key' => 'note',
                     'require_list' => false,
-                    'label' => 'Note',
-                    'tips' => 'You can write a note for this contact or add smart tags to include',
+                    'label' => __('Note', 'ff_brightdoor'),
+                    'tips' => __('You can write a note for this contact or add smart tags to include', 'ff_brightdoor'),
                     'component' => 'value_textarea'
                 ],
                
@@ -359,21 +360,28 @@ class FF_BrightDoor extends IntegrationManager
                 ], */
                 [
                     'key' => 'conditionals',
-                    'label' => 'Conditional Logics',
-                    'tips' => 'Allow BrightDoor integration conditionally based on your submission values',
+                    'label' => __('Conditional Logics', 'ff_brightdoor'),
+                    'tips' => __('Allow BrightDoor integration conditionally based on your submission values', 'ff_brightdoor'),
                     'component' => 'conditional_block'
                 ],
                 [
                     'key' => 'check_existing_email',
-                    'label' => 'Check for Existing Contact before updating',
+                    'label' => __('Check for Existing Contact before updating', 'ff_brightdoor'),
                     'component' => 'checkbox-single',
                     'checkbox_label' => 'Check Existing'
                 ],
                 [
                     'key' => 'enabled',
-                    'label' => 'Status',
+                    'label' => __('Status', 'ff_brightdoor'),
                     'component' => 'checkbox-single',
                     'checkbox_label' => 'Enable This feed'
+                ],
+                [
+                    'key' => 'debug',
+                    'label' => __('Debug', 'ff_brightdoor'),
+                    'tips' => __('Turning on Debug will prevent API submission and return the formatted Feed info', 'ff_brightdoor'),
+                    'component' => 'checkbox-single',
+                    'checkbox_label' => 'Debug this feed'
                 ]
             ],
             //'button_require_list' => true,
@@ -402,7 +410,6 @@ class FF_BrightDoor extends IntegrationManager
         }
         return $formattedLists;
     }
-
     */
 
     public function getAttributeFields()
@@ -415,7 +422,6 @@ class FF_BrightDoor extends IntegrationManager
     {
         return [];
     }
-
 
     /*
      * Submission Broadcast Handler
@@ -484,8 +490,8 @@ class FF_BrightDoor extends IntegrationManager
             ]), 
         ];
 
+        $extraFields = [];
         if( $feedData['extra_fields']){
-            $extraFields = [];
 
             foreach (ArrayHelper::get($feedData, 'extra_fields') as $item) {
                 if (!empty($item['item_value'])){
@@ -506,8 +512,7 @@ class FF_BrightDoor extends IntegrationManager
                 }
 
             }
-
-            $newContactFields['ContactAttributes'] = $attributes;
+            $extraFields['ContactAttributes'] = $attributes;
         }
         
 
@@ -552,29 +557,31 @@ class FF_BrightDoor extends IntegrationManager
 
         $contactData = multi_array_filter($contactData);
 
-        /** Uncomment this to test output without submitting data 
-        * Requires the filter "fluentform_notifying_async_brightdoor" to return false (in constructor) ***
-        die('<pre>' . print_r( $contactData, true ) . '</pre>');
-        */
         
-    
+        // Enable DEBUG
+        // Allows testing the output without submitting data * Requires ASYNC to be off 
+        if( $feedData['debug'] ) {
+           die('<pre>' . print_r( $contactData, true ) . '</pre>');           
+        }
+        
 
         // add filter hooks
         $contactData = apply_filters('fluentform_integration_data_'.$this->integrationKey, $contactData, $feed, $entry);
 
-        // prepare the data and push to BrightDoor
-        $response = $api->sync_contact($contactData);
+       // prepare the data and push to BrightDoor
+       $response = $api->sync_contact($contactData);
 
         if (is_wp_error($response)) {
             do_action('ff_integration_action_result', $feed, 'failed', $response->get_error_message());
             return false;
 
         } else if ( wp_remote_retrieve_response_code($response) == 200) {
-            do_action('ff_integration_action_result', $feed, 'success', 'Brightdoor has been successfully initialed and synced contact data');
+            do_action('ff_integration_action_result', $feed, 'success', 'Brightdoor has been successfully initiated and synced contact data');
             return true;
+        } else{
+            do_action('ff_integration_action_result', $feed, 'failed', $response['result_message']);
         }
-
-        do_action('ff_integration_action_result', $feed, 'failed', $response['result_message']);
+        
     }
 
 
