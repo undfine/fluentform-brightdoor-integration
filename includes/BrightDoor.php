@@ -28,7 +28,7 @@ class FF_BrightDoor extends IntegrationManager
         $this->registerAdminHooks();
 
         // uncomment below to turn off async requests for debugging (useful on local environments or when WP-CHRON is not active)
-        // add_filter('fluentform_notifying_async_brightdoor', '__return_false');
+        //add_filter('fluentform_notifying_async_brightdoor', '__return_false');
     }
 
     public function getGlobalFields($fields)
@@ -505,10 +505,20 @@ class FF_BrightDoor extends IntegrationManager
 
             foreach (ArrayHelper::get($feedData, 'contact_attributes') as $item) {
                 if (!empty($item['item_value'])){
-                    $attributes[] = [
-                        'ContactAttributeDefName' => $item['label'], 
-                        'Value' => $item['item_value']
-                    ];
+                    
+                    // check if the attribute is a number and use the ID (int) or Name (string) if not
+                    if (is_numeric($item['label'])){
+                        $attributes[] = [
+                            'ContactAttributeDefId' => intval($item['label']), 
+                            'Value' => $item['item_value']
+                        ];
+                    } else{
+                        $attributes[] = [
+                            'ContactAttributeDefName' => $item['label'], 
+                            'Value' => $item['item_value']
+                        ];
+                    }
+                    
                 }
 
             }
@@ -574,12 +584,13 @@ class FF_BrightDoor extends IntegrationManager
         if (is_wp_error($response)) {
             do_action('ff_integration_action_result', $feed, 'failed', $response->get_error_message());
             return false;
-
         } else if ( wp_remote_retrieve_response_code($response) == 200) {
             do_action('ff_integration_action_result', $feed, 'success', 'Brightdoor has been successfully initiated and synced contact data');
             return true;
         } else{
-            do_action('ff_integration_action_result', $feed, 'failed', $response['result_message']);
+            $message = isset($response['message']) ? $response['message'] : 'Action failed with no response';
+            do_action('ff_integration_action_result', $feed, 'failed', $message );
+            
         }
         
     }

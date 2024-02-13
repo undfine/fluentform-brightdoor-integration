@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Fluent Forms Brightdoor Integration
  * Description: Used to import and sync contacts with Brightdoor CRM
- * Version:     1.2.2
+ * Version:     1.2.4
  * Author:      Dustin Wight
  * Author URI: https://github.com/undfine/fluentform-brightdoor-integration
  * Text Domain: ff_brightdoor

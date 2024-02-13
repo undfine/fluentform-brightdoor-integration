@@ -1,6 +1,9 @@
 <?php
 
-// namespace FluentForm\Integrations\BrightDoorApi;
+/** 
+* For notes and test, see the API documentation:
+* https://api.brightdoor.com/swagger/index.html
+*/
 
 if (!defined('ABSPATH')) {
     exit; // Exit if accessed directly.
@@ -37,6 +40,12 @@ class BrightDoorApi
 		];
 	}
 
+	/**
+	 * @param 	string 	$action API endpoint
+	 * @param 	array 	$data	Request body
+	 * @param	string	$method Default: GET
+	 * @return 	array/mixed  Decoded JSON response body (array) or error message
+	 */
 	public function make_request( $action, $data = [], $method = 'GET' )
 	{	
 		if (empty($data)){
@@ -135,7 +144,7 @@ class BrightDoorApi
 	 * 
 	 * @access public
 	 * @param  string $email
-	 * @return JSON Object with contact ID
+	 * @return array with contact ID
 	 * 
 	 */
 	public function get_contact_by_email( $email )
