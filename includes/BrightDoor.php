@@ -186,9 +186,9 @@ class FF_BrightDoor extends IntegrationManager
                 ]
             ],
             'note' => '',
-            'contact_status_id' => '6', // 6 = UG Prospect
-            'contact_initial_type' => '6', // 6 = Internet Contact
-            'contact_lead_source' => '22', // 22 = This website
+            'contact_status_id' => 6, // 6 = UG Prospect
+            'contact_initial_type' => 6, // 6 = Internet Contact
+            'contact_lead_source' => 22, // 22 = This website
             'conditionals' => [
                 'conditions' => [],
                 'status' => false,
@@ -449,7 +449,7 @@ class FF_BrightDoor extends IntegrationManager
                 [
                 'EmailAddressLabelId' => 1,
                 'EmailAddress' => $feedData['emailAddress'],
-                // 'IsPreferred' => true,
+                'IsPreferred' => true,
                 // 'IsDoNotEmail' => false,
                 // 'IsDoNotEblast' => false 
                 ]
@@ -476,17 +476,18 @@ class FF_BrightDoor extends IntegrationManager
                 // 'IsDoNotMail' => true
                 ]
             ),
+            'InitialContactType' => [
+                'InitialContactTypeId' => intval($feedData['contact_initial_type']), // 6 = Internet Contact 
+            ], 
             'Notes' => $feedData['note']
         ];
 
         $newContactFields = [
-            'ContactTypeId' => '1', // 1 = Prospect
-            'ContactStatusId' => $feedData['contact_status_id'],
-            'InitialContactType' => [
-                'InitialContactTypeId' => $feedData['contact_initial_type'] 
-            ], 
+            'ContactTypeId' => 1, // 1 = Prospect
+            'ContactStatusId' => intval($feedData['contact_status_id']), // 6 = UG Prospect
             'ContactLeadSources' => array([ 
-                'LeadSourceId' => $feedData['contact_lead_source'] 
+                'LeadSourceId' => intval($feedData['contact_lead_source']),
+                // 'initialContactTypeName' => 'string'
             ]), 
         ];
 
@@ -568,11 +569,12 @@ class FF_BrightDoor extends IntegrationManager
         $contactData = multi_array_filter($contactData);
 
         
-        // Enable DEBUG
+        /* //Enable DEBUG
         // Allows testing the output without submitting data * Requires ASYNC to be off 
         if( $feedData['debug'] ) {
            die('<pre>' . print_r( $contactData, true ) . '</pre>');           
         }
+        */
         
 
         // add filter hooks
@@ -580,17 +582,27 @@ class FF_BrightDoor extends IntegrationManager
 
        // prepare the data and push to BrightDoor
        $response = $api->sync_contact($contactData);
+        
+        if( $feedData['debug'] ) {
+            error_log('BrightDoor sync_contact response type: ' . gettype($response) . ' value: ' . print_r($response, true));
+        }
+        // check for success
+        if (is_array($response) && isset($response['success'])) {
+            $status = !empty($response['success']) && $response['success'] == true ? 'success' : 'failed';
+            $message = isset($response['message']) ? $response['message'] : __('Brightdoor has been successfully initiated and synced contact data', 'ff_brightdoor');
 
-        if (is_wp_error($response)) {
-            do_action('ff_integration_action_result', $feed, 'failed', $response->get_error_message());
-            return false;
-        } else if ( wp_remote_retrieve_response_code($response) == 200) {
-            do_action('ff_integration_action_result', $feed, 'success', 'Brightdoor has been successfully initiated and synced contact data');
+            do_action('fluentform/integration_action_result', $feed, $status, $message);
             return true;
-        } else{
-            $message = isset($response['message']) ? $response['message'] : 'Action failed with no response';
-            do_action('ff_integration_action_result', $feed, 'failed', $message );
-            
+
+        } elseif (is_wp_error($response)) {
+            $message = $response->get_error_message();
+            do_action('fluentform/integration_action_result', $feed, 'failed', $message);
+            return false;
+
+        }  else {
+            $message = __('Action processed with no response', 'ff_brightdoor');
+            do_action('fluentform/integration_action_result', $feed, 'failed', $message);
+            return false;
         }
         
     }

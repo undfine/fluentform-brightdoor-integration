@@ -86,7 +86,7 @@ class BrightDoorApi
 		}
 					
 		// If WP_Error, die. Otherwise, return decoded JSON
-		if ( is_wp_error( $response ) ) {
+		if ( is_wp_error( $response ) || !isset($response['body']) ) {
 		   return $response;
 		} else {
 			return json_decode( $response['body'], true );
