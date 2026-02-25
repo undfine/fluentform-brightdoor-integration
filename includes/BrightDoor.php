@@ -28,7 +28,7 @@ class FF_BrightDoor extends IntegrationManager
         $this->registerAdminHooks();
 
         // uncomment below to turn off async requests for debugging (useful on local environments or when WP-CHRON is not active)
-        //add_filter('fluentform_notifying_async_brightdoor', '__return_false');
+        // add_filter('fluentform_notifying_async_brightdoor', '__return_false');
     }
 
     public function getGlobalFields($fields)
@@ -441,7 +441,10 @@ class FF_BrightDoor extends IntegrationManager
             do_action('ff_integration_action_result', $feed, 'failed', 'API call has been skipped because no valid email available');
             return;
         }
-        
+
+        // insert hook to filter the lead_source for custom logic (based on form data, entry, and form)
+        $feedData['contact_lead_source'] = apply_filters('ff_brightdoor_lead_source', $feedData['contact_lead_source'], $feed, $formData, $entry, $form);
+
         $mainFields = [
             'FirstName' => $feedData['firstName'],
             'LastName' => $feedData['lastName'],
@@ -569,7 +572,7 @@ class FF_BrightDoor extends IntegrationManager
         $contactData = multi_array_filter($contactData);
 
         
-        /* //Enable DEBUG
+        /* //Enable DEBUG 
         // Allows testing the output without submitting data * Requires ASYNC to be off 
         if( $feedData['debug'] ) {
            die('<pre>' . print_r( $contactData, true ) . '</pre>');           
@@ -581,7 +584,7 @@ class FF_BrightDoor extends IntegrationManager
         $contactData = apply_filters('fluentform_integration_data_'.$this->integrationKey, $contactData, $feed, $entry);
 
        // prepare the data and push to BrightDoor
-       $response = $api->sync_contact($contactData);
+       $response = $api->sync_contact($contactData); 
         
         if( $feedData['debug'] ) {
             error_log('BrightDoor sync_contact response type: ' . gettype($response) . ' value: ' . print_r($response, true));
