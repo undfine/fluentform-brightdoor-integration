@@ -4,7 +4,7 @@ Tags: fluent forms, fluent forms pro, fluent forms pro integration, Brightdoor
 Requires at least: 6.2
 Tested up to: 6.2
 Requires PHP: 5.6
-Stable tag: 1.2.7
+Stable tag: 1.2.8
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -73,6 +73,9 @@ Parameters:
 - `$entry` (array) - The form entry
 
 == Changelog ==
+
+= 1.2.8 =
+* Increased BrightDoor API request timeout from 5 to 30 seconds to prevent cURL error 28 timeouts
 
 = 1.2.7 =
 * Added `ff_brightdoor_lead_source` filter to allow dynamic lead source mapping
