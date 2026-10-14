@@ -64,6 +64,7 @@ class BrightDoorApi
 
 				$args = array(
                     'body'    => json_encode($data),
+                    'timeout' => 30,
                     'headers' => [
                         'Content-Type' => 'application/json'
                     ]
